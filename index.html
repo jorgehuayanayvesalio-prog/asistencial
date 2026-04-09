@@ -1,362 +1,185 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Turnos de Enfermería</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Turnos de Enfermería</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f2f1ec;--surface:#fff;--surface2:#f0efe9;--border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.17);
+  --text:#1a1a18;--text2:#6b6b65;--text3:#9a9a93;
+  --radius:10px;--radius-sm:6px;
+  --blue:#185FA5;--blue-lt:#B5D4F4;--blue-dk:#042C53;
+  --green:#3B6D11;--purple:#534AB7;--purple-lt:#CCC0F0;--purple-dk:#26215C;
+  --amber:#FAC775;--amber-dk:#412402;
+  --gray:#D3D1C7;--gray-dk:#2C2C2A;
+  --red:#A32D2D;--teal:#1D9E75;--teal-lt:#9FE1CB;--teal-dk:#04342C;
+  --coral:#D85A30;--coral-lt:#F5C4B3;--coral-dk:#4A1B0C;
+  --pink:#D4537E;--pink-lt:#F4C0D1;--pink-dk:#4B1528;
+}
+body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-    :root {
-      --bg: #f5f4f0;
-      --surface: #ffffff;
-      --surface2: #f0efe9;
-      --border: rgba(0,0,0,0.10);
-      --border2: rgba(0,0,0,0.18);
-      --text: #1a1a18;
-      --text2: #6b6b65;
-      --text3: #9a9a93;
-      --radius: 10px;
-      --radius-sm: 6px;
-      --blue: #185FA5;
-      --blue-light: #B5D4F4;
-      --blue-dark: #042C53;
-      --green: #3B6D11;
-      --purple: #534AB7;
-      --amber: #FAC775;
-      --amber-dark: #412402;
-      --purple-light: #CCC0F0;
-      --purple-dark: #26215C;
-      --gray: #D3D1C7;
-      --gray-dark: #2C2C2A;
-      --red: #A32D2D;
-    }
+/* HEADER */
+header{background:var(--surface);border-bottom:.5px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.header-left{display:flex;align-items:center;gap:12px}
+.logo{width:34px;height:34px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round}
+header h1{font-size:15px;font-weight:500;color:var(--text)}
+header h1 span{font-size:11px;color:var(--text3);margin-left:4px;font-weight:400}
+.user-badge{font-size:11px;padding:4px 10px;background:var(--surface2);border:.5px solid var(--border2);border-radius:20px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.user-badge strong{color:var(--text);font-weight:500}
+#btn-logout{background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);padding:2px 4px;border-radius:3px}
+#btn-logout:hover{color:var(--red)}
 
-    body {
-      font-family: 'Georgia', serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 0;
-    }
+/* LOGIN */
+#login-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:2rem}
+.login-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius);padding:2rem;width:100%;max-width:380px}
+.login-card h2{font-size:16px;font-weight:500;margin-bottom:.25rem}
+.login-card p{font-size:12px;color:var(--text3);margin-bottom:1.5rem}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:11px;color:var(--text2)}
+.field input,.field select{height:36px;padding:0 12px;font-size:13px;border:.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;transition:border-color .15s;font-family:inherit}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.field select option{background:var(--surface)}
 
-    header {
-      background: var(--surface);
-      border-bottom: 0.5px solid var(--border);
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
+/* MAIN */
+main{max-width:1600px;margin:0 auto;padding:1.5rem}
+.panel{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem}
+.panel-title{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:1rem}
 
-    .logo {
-      width: 36px; height: 36px;
-      background: var(--blue);
-      border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .logo svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+.config-row{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 
-    header h1 {
-      font-size: 16px;
-      font-weight: normal;
-      letter-spacing: .01em;
-      color: var(--text);
-    }
-    header span {
-      font-size: 12px;
-      color: var(--text3);
-      margin-left: 4px;
-    }
+/* BUTTONS */
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center}
+.btn{height:34px;padding:0 16px;font-size:12px;font-family:inherit;font-weight:500;border:.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;transition:background .15s,transform .1s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--surface2)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-primary:hover{background:#0c447c}
+.btn-success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-success:hover{background:#27500A}
+.btn-load{background:var(--purple);color:#fff;border-color:var(--purple)}
+.btn-load:hover{background:#3C3489}
+.btn-excel{background:var(--teal);color:#fff;border-color:var(--teal)}
+.btn-excel:hover{background:#0F6E56}
 
-    main {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:var(--radius);border:.5px solid var(--border)}
+table{border-collapse:collapse;width:100%;font-family:inherit}
+thead th{background:var(--surface2);font-size:10px;font-weight:600;color:var(--text2);padding:5px 4px;text-align:center;border-bottom:.5px solid var(--border);white-space:nowrap;line-height:1.3;position:sticky;top:0;z-index:1}
+thead th.col-nurse{text-align:left;min-width:170px;padding-left:12px}
+thead th.col-total{background:#EAF3DE;color:#27500A;min-width:52px}
+thead th.we{color:var(--blue)}
+tbody tr{border-bottom:.5px solid var(--border)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover td{background:#fafaf7}
+td{padding:2px 3px}
+td.col-nurse{padding:3px 12px;background:var(--surface2);border-right:.5px solid var(--border)}
+td.col-nurse input{border:none;background:transparent;font-size:12px;font-weight:500;color:var(--text);width:160px;outline:none;padding:2px 0;border-bottom:1px solid transparent;transition:border-color .15s;font-family:inherit}
+td.col-nurse input:focus{border-bottom-color:var(--blue)}
+td.col-total{background:#EAF3DE;font-size:12px;font-weight:700;color:#27500A;text-align:center;border-left:.5px solid #C0DD97}
 
-    .panel {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1rem;
-    }
+select.t-sel{width:46px;height:26px;font-size:10px;font-family:inherit;font-weight:700;padding:0 2px;border:.5px solid var(--border);border-radius:3px;background:var(--surface);color:var(--text);text-align:center;cursor:pointer;outline:none;transition:background .1s}
 
-    .panel-title {
-      font-size: 10px;
-      font-weight: bold;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 1rem;
-      font-family: 'Helvetica Neue', sans-serif;
-    }
+/* Turno colors */
+.t1{background:#B5D4F4;color:#042C53;border-color:#85B7EB}
+.t2{background:var(--amber);color:var(--amber-dk);border-color:#EF9F27}
+.t3{background:var(--purple-lt);color:var(--purple-dk);border-color:#AFA9EC}
+.t12{background:#FAC775;color:#26215C;border-color:#7F77DD}
+.t23{background:var(--teal-lt);color:var(--teal-dk);border-color:#1D9E75}
+.tLM{background:#FFD700;color:#412402;border-color:#BA7517}
+.tLR{background:var(--coral-lt);color:var(--coral-dk);border-color:#D85A30}
+.tV{background:var(--gray);color:var(--gray-dk);border-color:#B4B2A9}
 
-    .config-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      align-items: flex-end;
-    }
+.del-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 7px;border-radius:4px;transition:color .15s,background .15s}
+.del-btn:hover{color:var(--red);background:#fcebeb}
 
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    .field label {
-      font-size: 11px;
-      color: var(--text2);
-      font-family: 'Helvetica Neue', sans-serif;
-    }
-    .field input, .field select {
-      height: 36px;
-      padding: 0 12px;
-      font-size: 13px;
-      font-family: 'Helvetica Neue', sans-serif;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      color: var(--text);
-      outline: none;
-      transition: border-color .15s;
-    }
-    .field input:focus, .field select:focus {
-      border-color: var(--blue);
-    }
+/* LEGEND */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding-left:2px;align-items:center}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.leg-dot{width:28px;height:20px;border-radius:3px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:.5px solid transparent}
 
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-      align-items: center;
-    }
+/* STATUS */
+.status-bar{display:none;align-items:center;gap:8px;font-size:11px;color:var(--text2);margin-bottom:8px;padding:4px 2px}
+.s-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
+.s-dot.red{background:var(--red)}
 
-    .btn {
-      height: 36px;
-      padding: 0 18px;
-      font-size: 13px;
-      font-family: 'Helvetica Neue', sans-serif;
-      font-weight: 500;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius-sm);
-      background: var(--surface);
-      color: var(--text);
-      cursor: pointer;
-      transition: background .15s, transform .1s;
-      display: flex; align-items: center; gap: 7px;
-    }
-    .btn:hover { background: var(--surface2); }
-    .btn:active { transform: scale(.98); }
-    .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .btn-primary:hover { background: #0c447c; }
-    .btn-success { background: var(--green); color: #fff; border-color: var(--green); }
-    .btn-success:hover { background: #27500A; }
-    .btn-load { background: var(--purple); color: #fff; border-color: var(--purple); }
-    .btn-load:hover { background: #3C3489; }
+.empty-state{padding:3rem;text-align:center;color:var(--text3);font-size:13px}
 
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: var(--radius);
-      border: 0.5px solid var(--border);
-    }
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s,transform .3s;transform:translateY(8px);pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:var(--green);color:#fff}
+.toast.err{background:var(--red);color:#fff}
+.toast.info{background:var(--blue);color:#fff}
 
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      min-width: 600px;
-      font-family: 'Helvetica Neue', sans-serif;
-    }
-
-    thead th {
-      background: var(--surface2);
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text2);
-      padding: 6px 5px;
-      text-align: center;
-      border-bottom: 0.5px solid var(--border);
-      white-space: nowrap;
-      line-height: 1.4;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    thead th.col-nurse { text-align: left; min-width: 160px; padding-left: 14px; }
-    thead th.we { color: var(--blue); }
-
-    tbody tr { border-bottom: 0.5px solid var(--border); }
-    tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover td { background: #fafaf7; }
-
-    td { padding: 3px 4px; }
-    td.col-nurse {
-      padding: 4px 14px;
-      background: var(--surface2);
-      border-right: 0.5px solid var(--border);
-    }
-    td.col-nurse input {
-      border: none;
-      background: transparent;
-      font-size: 13px;
-      font-weight: 500;
-      font-family: 'Helvetica Neue', sans-serif;
-      color: var(--text);
-      width: 150px;
-      outline: none;
-      padding: 2px 0;
-      border-bottom: 1px solid transparent;
-      transition: border-color .15s;
-    }
-    td.col-nurse input:focus { border-bottom-color: var(--blue); }
-
-    select.t-sel {
-      width: 46px;
-      height: 28px;
-      font-size: 11px;
-      font-family: 'Helvetica Neue', sans-serif;
-      font-weight: 600;
-      padding: 0 3px;
-      border: 0.5px solid var(--border);
-      border-radius: 4px;
-      background: var(--surface);
-      color: var(--text);
-      text-align: center;
-      cursor: pointer;
-      outline: none;
-      transition: background .1s;
-    }
-
-    .tN { background: var(--blue-light); color: var(--blue-dark); border-color: #85B7EB; }
-    .tT { background: var(--amber); color: var(--amber-dark); border-color: #EF9F27; }
-    .tTN { background: var(--purple-light); color: var(--purple-dark); border-color: #AFA9EC; }
-    .tD { background: #32CD32; color: var(--amber-dark); border-color: #B4B2A9; }
-    .tM { background: #FFD700; color: var(--amber-dark); border-color: #EF9F27; }
-    .tV { background: var(--gray); color: var(--gray-dark); border-color: #B4B2A9; }
-
-    .del-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--text3);
-      font-size: 14px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      transition: color .15s, background .15s;
-      font-family: sans-serif;
-    }
-    .del-btn:hover { color: var(--red); background: #fcebeb; }
-
-    .legend {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 12px;
-      padding-left: 2px;
-    }
-    .leg-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: var(--text2);
-      font-family: 'Helvetica Neue', sans-serif;
-    }
-    .leg-dot {
-      width: 22px; height: 22px;
-      border-radius: 4px;
-      font-size: 10px;
-      font-weight: 700;
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    .status-bar {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-family: 'Helvetica Neue', sans-serif;
-      color: var(--text2);
-      margin-bottom: 10px;
-      padding: 6px 4px;
-    }
-    .s-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
-    .s-dot.red { background: var(--red); }
-
-    .empty-state {
-      padding: 3rem;
-      text-align: center;
-      color: var(--text3);
-      font-size: 14px;
-      font-family: 'Helvetica Neue', sans-serif;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 11px 18px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-family: 'Helvetica Neue', sans-serif;
-      font-weight: 500;
-      z-index: 999;
-      opacity: 0;
-      transition: opacity .3s, transform .3s;
-      transform: translateY(8px);
-      pointer-events: none;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.ok { background: var(--green); color: #fff; }
-    .toast.err { background: var(--red); color: #fff; }
-    .toast.info { background: var(--blue); color: #fff; }
-
-    @media (max-width: 600px) {
-      main { padding: 1rem .75rem; }
-      header { padding: .75rem 1rem; }
-    }
-  </style>
+@media(max-width:600px){main{padding:1rem .75rem}header{padding:.65rem 1rem}}
+</style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
-    <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+  <div class="header-left">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    </div>
+    <h1>Asistencial — Turnos de Enfermería <span>v2.0</span></h1>
   </div>
-  <h1>Asistencial — Turnos de Enfermería <span>v1.0</span></h1>
+  <div id="header-user" style="display:none">
+    <div class="user-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <strong id="badge-name"></strong>
+      <span id="badge-area"></span>
+      <button id="btn-logout" onclick="logout()">✕ Salir</button>
+    </div>
+  </div>
 </header>
+
 <!-- LOGIN -->
-<div id="login-panel" class="panel" style="max-width:400px;margin:2rem auto;">
-  <p class="panel-title">Acceso de usuario</p>
-  <div class="config-row">
+<div id="login-wrap">
+  <div class="login-card">
+    <h2>Iniciar sesión</h2>
+    <p>Ingresa tus credenciales de área</p>
     <div class="field">
       <label>Usuario</label>
-      <input type="text" id="login-user" placeholder="Usuario" />
+      <input type="text" id="login-user" placeholder="usuario" autocomplete="username" onkeydown="if(event.key==='Enter')login()"/>
     </div>
     <div class="field">
       <label>Contraseña</label>
-      <input type="password" id="login-pass" placeholder="Contraseña" />
+      <input type="password" id="login-pass" placeholder="contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"/>
     </div>
-  </div>
-  <div class="actions" style="margin-top: 16px;">
-    <button class="btn btn-primary" onclick="login()">Ingresar</button>
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;height:38px" onclick="login()">Ingresar</button>
+    </div>
+    <p style="font-size:10px;color:var(--text3);margin-top:14px;line-height:1.5">Cada usuario solo puede ver y editar su área asignada.<br>El administrador tiene acceso a todas las áreas.</p>
   </div>
 </div>
 
-<!-- MAIN CONTENT -->
-<main id="main-content" style="display:none;">
+<!-- MAIN -->
+<main id="main-content" style="display:none">
   <div class="panel">
     <p class="panel-title">Parámetros del periodo</p>
     <div class="config-row">
-      <div class="field">
+      <div class="field" style="margin:0">
         <label>Periodo (Año - Mes)</label>
-        <input type="month" id="periodo" />
+        <input type="month" id="periodo"/>
       </div>
-      <div class="field">
+      <div class="field" id="area-field" style="margin:0">
         <label>Área</label>
         <select id="area">
           <option value="">-- Seleccionar área --</option>
-          <option value="UCI">UCI</option>
-          <option value="Emergencia">Emergencia</option>
-          <option value="Hospitalario">Hospitalario</option>
+          <option>HOSPITALIZACION</option>
+          <option>EMERGENCIA</option>
+          <option>UNIDAD DE CUIDADOS INTENSIVOS</option>
+          <option>CENTRO QUIRURGICO</option>
+          <option>CENTRO OBSTETRICO</option>
+          <option>SALA DE PROCEDIMIENTOS</option>
+          <option>CENTRAL DE ESTERILIZACION</option>
+          <option>DEPARTAMENTO DE ENFERMERIA</option>
+          <option>NEONATOLOGIA</option>
+          <option>UNIDAD DE QUEMADOS</option>
         </select>
       </div>
     </div>
@@ -364,16 +187,20 @@
 
   <div class="actions">
     <button class="btn btn-primary" onclick="addRow()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       Agregar enfermera
     </button>
     <button class="btn btn-success" onclick="saveData()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Guardar turnos
     </button>
     <button class="btn btn-load" onclick="loadData()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
       Generar / Cargar datos
+    </button>
+    <button class="btn btn-excel" onclick="exportExcel()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Descargar Excel
     </button>
   </div>
 
@@ -387,260 +214,353 @@
   </div>
 
   <div class="legend">
-    <span class="leg-item"><span class="leg-dot tM">1</span> Mañana</span>
-    <span class="leg-item"><span class="leg-dot tT">2</span> Tarde</span>
-    <span class="leg-item"><span class="leg-dot tN">3</span> Noche</span>
-    <span class="leg-item"><span class="leg-dot tD">1/2</span> Dia</span>
-    <span class="leg-item"><span class="leg-dot tTN">2/3</span> Tarde-Noche</span>
-    
+    <span style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;margin-right:4px">Turnos:</span>
+    <span class="leg-item"><span class="leg-dot t1">1</span> Mañana (1pt)</span>
+    <span class="leg-item"><span class="leg-dot t2">2</span> Tarde (1pt)</span>
+    <span class="leg-item"><span class="leg-dot t3">3</span> Noche (2pt)</span>
+    <span class="leg-item"><span class="leg-dot t12">1/2</span> Día (2pt)</span>
+    <span class="leg-item"><span class="leg-dot t23">2/3</span> T-N (3pt)</span>
+    <span class="leg-item"><span class="leg-dot tLM">LM</span> Libre M (2pt)</span>
+    <span class="leg-item"><span class="leg-dot tLR">LR</span> Libre R (1pt)</span>
     <span class="leg-item"><span class="leg-dot tV">V</span> Descanso</span>
-    <span class="leg-item" style="color:var(--text3)">— Sin turno asignado</span>
   </div>
 </main>
 
 <div id="toast" class="toast"></div>
 
 <script>
-  const SB_URL = 'https://kuqettbaqlezvczdzytj.supabase.co';
-  const SB_KEY = 'sb_publishable_uBtrL5lqa1ysxOsCLHAGmQ_V9TgC1fk';
-  const H = {
-    'apikey': SB_KEY,
-    'Authorization': 'Bearer ' + SB_KEY,
-    'Content-Type': 'application/json'
-  };
+const SB_URL='https://kuqettbaqlezvczdzytj.supabase.co';
+const SB_KEY='sb_publishable_uBtrL5lqa1ysxOsCLHAGmQ_V9TgC1fk';
+const H={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
 
-  // Usuarios y áreas
-  const users = {
-    'uci': { password: '1234', area: 'UCI' },
-    'emergencia': { password: '5678', area: 'Emergencia' },
-    'hospitalario': { password: 'abcd', area: 'Hospitalario' }
-  };
+const AREAS=[
+  'HOSPITALIZACION','EMERGENCIA','UNIDAD DE CUIDADOS INTENSIVOS',
+  'CENTRO QUIRURGICO','CENTRO OBSTETRICO','SALA DE PROCEDIMIENTOS',
+  'CENTRAL DE ESTERILIZACION','DEPARTAMENTO DE ENFERMERIA',
+  'NEONATOLOGIA','UNIDAD DE QUEMADOS'
+];
 
-  function login() {
-    const u = document.getElementById('login-user').value.trim();
-    const p = document.getElementById('login-pass').value.trim();
-    if (users[u] && users[u].password === p) {
-    const userArea = users[u].area;
+const USERS={
+  'hospitalizacion': {pass:'Hosp2024',  area:'HOSPITALIZACION'},
+  'emergencia':      {pass:'Emer2024',  area:'EMERGENCIA'},
+  'uci':             {pass:'UCI2024',   area:'UNIDAD DE CUIDADOS INTENSIVOS'},
+  'cquirurgico':     {pass:'CQ2024',    area:'CENTRO QUIRURGICO'},
+  'cobstetrico':     {pass:'CO2024',    area:'CENTRO OBSTETRICO'},
+  'procedimientos':  {pass:'Proc2024',  area:'SALA DE PROCEDIMIENTOS'},
+  'esterilizacion':  {pass:'Ester2024', area:'CENTRAL DE ESTERILIZACION'},
+  'enfermeria':      {pass:'Enf2024',   area:'DEPARTAMENTO DE ENFERMERIA'},
+  'neonatologia':    {pass:'Neo2024',   area:'NEONATOLOGIA'},
+  'quemados':        {pass:'Quem2024',  area:'UNIDAD DE QUEMADOS'},
+  'admin':           {pass:'Admin2024', area:'__ALL__'}
+};
 
-    document.getElementById('login-panel').style.display = 'none';
-    document.getElementById('main-content').style.display = 'block';
+const TURNO_PTS={'1':1,'2':1,'3':2,'1/2':2,'2/3':3,'LM':2,'LR':1,'V':0,'':0};
+const TURNO_OPTS=['1','2','3','1/2','2/3','LM','LR','V'];
+const TURNO_CLASS={'1':'t1','2':'t2','3':'t3','1/2':'t12','2/3':'t23','LM':'tLM','LR':'tLR','V':'tV'};
 
-    // Fijar el área y bloquear cambios
-    const areaSel = document.getElementById('area');
-    areaSel.value = userArea;
-    areaSel.disabled = true;
+let rows=[];
+let currentUser=null;
 
-    showToast('Bienvenido ' + u, 'ok');
+/* ---- AUTH ---- */
+function login(){
+  const u=document.getElementById('login-user').value.trim().toLowerCase();
+  const p=document.getElementById('login-pass').value.trim();
+  if(USERS[u]&&USERS[u].pass===p){
+    currentUser={name:u,...USERS[u]};
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('main-content').style.display='block';
+    document.getElementById('header-user').style.display='block';
+    document.getElementById('badge-name').textContent=u;
+    document.getElementById('badge-area').textContent=currentUser.area==='__ALL__'?'(todos las áreas)':'· '+currentUser.area;
+
+    const areaSel=document.getElementById('area');
+    if(currentUser.area!=='__ALL__'){
+      areaSel.value=currentUser.area;
+      areaSel.disabled=true;
+      document.getElementById('area-field').style.display='none';
     } else {
-      showToast('Usuario o contraseña incorrectos', 'err');
+      areaSel.disabled=false;
+      document.getElementById('area-field').style.display='block';
     }
+    showToast('Bienvenido, '+u,'ok');
+  } else {
+    showToast('Usuario o contraseña incorrectos','err');
+    document.getElementById('login-pass').value='';
   }
+}
 
-  function showToast(msg, type) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast ' + type + ' show';
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3200);
-  }
+function logout(){
+  currentUser=null; rows=[];
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('main-content').style.display='none';
+  document.getElementById('header-user').style.display='none';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('table-container').innerHTML='<div class="empty-state">Selecciona un periodo y área para comenzar.</div>';
+  document.getElementById('status-bar').style.display='none';
+}
 
-  function getPeriodo() { return document.getElementById('periodo').value; }
-  function getArea() { return document.getElementById('area').value; }
+/* ---- UTILS ---- */
+function getPeriodo(){return document.getElementById('periodo').value;}
+function getArea(){return document.getElementById('area').value;}
+function getDays(p){
+  if(!p)return[];
+  const[y,m]=p.split('-').map(Number);
+  return Array.from({length:new Date(y,m,0).getDate()},(_,i)=>i+1);
+}
+function isWE(d,p){const[y,m]=p.split('-').map(Number);const w=new Date(y,m-1,d).getDay();return w===0||w===6;}
+function wdL(d,p){const[y,m]=p.split('-').map(Number);return['D','L','M','X','J','V','S'][new Date(y,m-1,d).getDay()];}
+function tCls(v){return v&&TURNO_CLASS[v]?TURNO_CLASS[v]:'';}
+function esc(s){return(s||'').replace(/"/g,'&quot;');}
+function calcTotal(turnos){return Object.values(turnos).reduce((s,v)=>s+(TURNO_PTS[v]||0),0);}
 
-  function getDays(periodo) {
-    if (!periodo) return [];
-    const [y, m] = periodo.split('-').map(Number);
-    const n = new Date(y, m, 0).getDate();
-    return Array.from({ length: n }, (_, i) => i + 1);
-  }
+function setStatus(type,msg){
+  const bar=document.getElementById('status-bar');
+  bar.style.display='flex';
+  document.getElementById('s-dot').className='s-dot'+(type==='err'?' red':'');
+  document.getElementById('s-msg').textContent=msg;
+}
 
-  function isWE(d, periodo) {
-    const [y, m] = periodo.split('-').map(Number);
-    const wd = new Date(y, m - 1, d).getDay();
-    return wd === 0 || wd === 6;
-  }
+/* ---- RENDER ---- */
+function renderTable(){
+  const periodo=getPeriodo();
+  const days=getDays(periodo);
+  const container=document.getElementById('table-container');
+  if(!rows.length){container.innerHTML='<div class="empty-state">No hay enfermeras. Agrega una o carga datos guardados.</div>';return;}
 
-  function wdLetter(d, periodo) {
-    const [y, m] = periodo.split('-').map(Number);
-    return ['D', 'L', 'M', 'X', 'J', 'V', 'S'][new Date(y, m - 1, d).getDay()];
-  }
+  let h='<div class="table-wrap"><table><thead><tr><th class="col-nurse">Enfermera</th>';
+  days.forEach(d=>{
+    const we=isWE(d,periodo);
+    h+=`<th${we?' class="we"':''}>${d}<br><span style="font-size:8px;opacity:.65">${wdL(d,periodo)}</span></th>`;
+  });
+  h+='<th class="col-total">Total</th><th style="width:36px"></th></tr></thead><tbody>';
 
-  function tClass(v) { return v ? 't' + v : ''; }
-  function esc(s) { return (s || '').replace(/"/g, '&quot;'); }
+  rows.forEach((row,ri)=>{
+    const total=calcTotal(row.turnos);
+    h+=`<tr><td class="col-nurse"><input type="text" value="${esc(row.enfermera)}" onchange="rows[${ri}].enfermera=this.value;updateTotal(${ri})" placeholder="Nombre"/></td>`;
+    days.forEach(d=>{
+      const v=row.turnos[d]||'';
+      const cls=tCls(v);
+      let opts='<option value="">–</option>';
+      TURNO_OPTS.forEach(o=>opts+=`<option value="${o}"${v===o?' selected':''}>${o}</option>`);
+      h+=`<td style="text-align:center"><select class="t-sel ${cls}" onchange="setTurno(${ri},${d},this)">${opts}</select></td>`;
+    });
+    h+=`<td class="col-total" id="total-${ri}">${total}</td>`;
+    h+=`<td style="text-align:center"><button class="del-btn" onclick="removeRow(${ri})" title="Quitar">✕</button></td></tr>`;
+  });
 
-  function renderTable() {
-    const periodo = getPeriodo();
-    const days = getDays(periodo);
-    const container = document.getElementById('table-container');
+  h+='</tbody></table></div>';
+  container.innerHTML=h;
+}
 
-    if (!rows.length) {
-      container.innerHTML = '<div class="empty-state">No hay enfermeras. Usa "Agregar enfermera" o carga datos guardados.</div>';
-      return;
+function setTurno(ri,d,sel){
+  rows[ri].turnos[d]=sel.value;
+  sel.className='t-sel '+tCls(sel.value);
+  const t=document.getElementById('total-'+ri);
+  if(t)t.textContent=calcTotal(rows[ri].turnos);
+}
+
+function updateTotal(ri){
+  const t=document.getElementById('total-'+ri);
+  if(t)t.textContent=calcTotal(rows[ri].turnos);
+}
+
+function addRow(){
+  if(!getPeriodo()){showToast('Selecciona un periodo primero','err');return;}
+  rows.push({enfermera:'Enfermera',turnos:{}});
+  renderTable();
+  setStatus('ok',rows.length+' enfermera(s) en tabla');
+}
+
+function removeRow(ri){rows.splice(ri,1);renderTable();}
+
+/* ---- SUPABASE ---- */
+async function saveData(){
+  const periodo=getPeriodo(),area=getArea();
+  if(!periodo||!area){showToast('Selecciona periodo y área','err');return;}
+  if(!rows.length){showToast('No hay datos para guardar','err');return;}
+  const days=getDays(periodo);
+  const records=[];
+  rows.forEach(row=>{
+    days.forEach(d=>{
+      const turno=row.turnos[d]||null;
+      if(turno){
+        const[y,m]=periodo.split('-');
+        records.push({periodo,area,enfermera:row.enfermera,fecha:`${y}-${m}-${String(d).padStart(2,'0')}`,turno});
+      }
+    });
+  });
+  setStatus('ok','Guardando...');showToast('Guardando...','info');
+  try{
+    const del=await fetch(`${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}`,{method:'DELETE',headers:H});
+    if(!del.ok&&del.status!==204)throw new Error('Error al limpiar previos: '+del.status);
+    if(records.length){
+      const ins=await fetch(`${SB_URL}/rest/v1/asistencial`,{method:'POST',headers:{...H,'Prefer':'return=minimal'},body:JSON.stringify(records)});
+      if(!ins.ok){const msg=await ins.text();throw new Error('Error al insertar ('+ins.status+'): '+msg);}
     }
+    showToast(`${records.length} turnos guardados`,'ok');
+    setStatus('ok',`Guardado — ${records.length} registros · ${area} · ${periodo}`);
+  }catch(e){showToast(e.message,'err');setStatus('err',e.message);}
+}
 
-    let h = '<div class="table-wrap"><table><thead><tr><th class="col-nurse">Enfermera</th>';
-    days.forEach(d => {
-      const we = isWE(d, periodo);
-      h += `<th${we ? ' class="we"' : ''}>${d}<br><span style="font-size:9px;opacity:.7">${wdLetter(d, periodo)}</span></th>`;
+async function loadData(){
+  const periodo=getPeriodo(),area=getArea();
+  if(!periodo||!area){showToast('Selecciona periodo y área','err');return;}
+  setStatus('ok','Consultando Supabase...');showToast('Cargando datos...','info');
+  try{
+    const res=await fetch(`${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}&select=enfermera,fecha,turno&order=enfermera.asc,fecha.asc`,{headers:H});
+    if(!res.ok)throw new Error('Error al consultar: '+res.status);
+    const data=await res.json();
+    const map={};
+    data.forEach(rec=>{
+      if(!map[rec.enfermera])map[rec.enfermera]={};
+      map[rec.enfermera][parseInt(rec.fecha.split('-')[2])]=rec.turno;
     });
-    h += '<th style="width:40px"></th></tr></thead><tbody>';
+    rows=Object.entries(map).map(([enfermera,turnos])=>({enfermera,turnos}));
+    if(!rows.length){
+      showToast('Sin registros para este periodo y área','err');
+      setStatus('err','Sin datos — '+area+' · '+periodo);
+      document.getElementById('table-container').innerHTML='<div class="empty-state">No hay registros guardados para este periodo y área.</div>';
+    } else {
+      showToast(`${rows.length} enfermeras cargadas`,'ok');
+      setStatus('ok',`${rows.length} enfermeras · ${data.length} turnos — ${area} · ${periodo}`);
+      renderTable();
+    }
+  }catch(e){showToast(e.message,'err');setStatus('err',e.message);}
+}
 
-    rows.forEach((row, ri) => {
-      h += `<tr>
-        <td class="col-nurse">
-          <input type="text" value="${esc(row.enfermera)}" onchange="rows[${ri}].enfermera=this.value" placeholder="Nombre enfermera" />
-        </td>`;
-      days.forEach(d => {
-        const v = row.turnos[d] || '';
-        const cls = tClass(v);
-        h += `<td style="text-align:center">
-          <select class="t-sel ${cls}" onchange="setTurno(${ri},${d},this)">
-            <option value="" ${!v ? 'selected' : ''}>–</option>
-            <option value="1" ${v === '1' ? 'selected' : ''}>1</option>
-            <option value="2" ${v === '2' ? 'selected' : ''}>2</option>
-            <option value="3" ${v === '3' ? 'selected' : ''}>3</option>
-            <option value="1/2" ${v === '1/2' ? 'selected' : ''}>1/2</option>
-            <option value="2/3" ${v === '2/3' ? 'selected' : ''}>2/3</option>
-            <option value="V" ${v === 'V' ? 'selected' : ''}>V</option>
-          </select>
-        </td>`;
-      });
-      h += `<td style="text-align:center"><button class="del-btn" onclick="removeRow(${ri})" title="Quitar fila">✕</button></td>`;
-      h += '</tr>';
-    });
+/* ---- EXCEL EXPORT ---- */
+async function exportExcel(){
+  const periodo=getPeriodo();
+  if(!periodo){showToast('Selecciona un periodo primero','err');return;}
+  showToast('Generando Excel...','info');
 
-    h += '</tbody></table></div>';
-    container.innerHTML = h;
-  }
+  const isAdmin=currentUser&&currentUser.area==='__ALL__';
+  const wb=XLSX.utils.book_new();
 
-  function setTurno(ri, d, sel) {
-    rows[ri].turnos[d] = sel.value;
-    sel.className = 't-sel ' + tClass(sel.value);
-  }
-
-  function addRow() {
-    if (!getPeriodo()) { showToast('Selecciona un periodo primero', 'err'); return; }
-    rows.push({ enfermera: 'Enfermera', turnos: {} });
-    renderTable();
-    setStatus('ok', rows.length + ' enfermera(s) en tabla');
-  }
-
-  function removeRow(ri) {
-    rows.splice(ri, 1);
-    renderTable();
-  }
-
-  function setStatus(type, msg) {
-    const bar = document.getElementById('status-bar');
-    bar.style.display = 'flex';
-    document.getElementById('s-dot').className = 's-dot' + (type === 'err' ? ' red' : '');
-    document.getElementById('s-msg').textContent = msg;
-  }
-
-  async function saveData() {
-    const periodo = getPeriodo();
-    const area = getArea();
-    if (!periodo || !area) { showToast('Selecciona periodo y área', 'err'); return; }
-    if (!rows.length) { showToast('No hay datos para guardar', 'err'); return; }
-
-    const days = getDays(periodo);
-    const records = [];
-    rows.forEach(row => {
-      days.forEach(d => {
-        const turno = row.turnos[d] || null;
-        if (turno) {
-          const [y, m] = periodo.split('-');
-          records.push({
-            periodo,
-            area,
-            enfermera: row.enfermera,
-            fecha: `${y}-${m}-${String(d).padStart(2, '0')}`,
-            turno
-          });
-        }
-      });
-    });
-
-    setStatus('ok', 'Guardando...');
-    showToast('Guardando...', 'info');
-
-    try {
-      const del = await fetch(
-        `${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}`,
-        { method: 'DELETE', headers: H }
-      );
-      if (!del.ok && del.status !== 204) throw new Error('Error al limpiar previos: ' + del.status);
-
-      if (records.length) {
-        const ins = await fetch(`${SB_URL}/rest/v1/asistencial`, {
-          method: 'POST',
-          headers: { ...H, 'Prefer': 'return=minimal' },
-          body: JSON.stringify(records)
+  if(isAdmin){
+    // Admin: una hoja por área con datos de Supabase
+    let hasData=false;
+    for(const area of AREAS){
+      try{
+        const res=await fetch(`${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}&select=enfermera,fecha,turno&order=enfermera.asc,fecha.asc`,{headers:H});
+        if(!res.ok)continue;
+        const data=await res.json();
+        if(!data.length)continue;
+        const map={};
+        data.forEach(rec=>{
+          if(!map[rec.enfermera])map[rec.enfermera]={};
+          map[rec.enfermera][parseInt(rec.fecha.split('-')[2])]=rec.turno;
         });
-        if (!ins.ok) {
-          const msg = await ins.text();
-          throw new Error('Error al insertar (' + ins.status + '): ' + msg);
-        }
-      }
-
-      showToast(`${records.length} turnos guardados`, 'ok');
-      setStatus('ok', `Guardado — ${records.length} registros · ${area} · ${periodo}`);
-    } catch (e) {
-      showToast(e.message, 'err');
-      setStatus('err', e.message);
+        const aRows=Object.entries(map).map(([e,t])=>({enfermera:e,turnos:t}));
+        appendSheet(wb,area,periodo,aRows);
+        hasData=true;
+      }catch(e){console.warn('Error área '+area,e);}
     }
+    if(!hasData){showToast('No hay datos para exportar en este periodo','err');return;}
+  } else {
+    // Usuario normal: solo su área, datos actuales en pantalla
+    const area=getArea();
+    if(!area){showToast('Selecciona un área','err');return;}
+    if(!rows.length){showToast('No hay datos. Carga primero los datos.','err');return;}
+    appendSheet(wb,area,periodo,rows);
   }
 
-  async function loadData() {
-    const periodo = getPeriodo();
-    const area = getArea();
-    if (!periodo || !area) { showToast('Selecciona periodo y área', 'err'); return; }
+  const fname=`Turnos_${periodo}${isAdmin?'_TODOS':'_'+getArea().replace(/ /g,'_')}.xlsx`;
+  XLSX.writeFile(wb,fname);
+  showToast('Excel descargado','ok');
+}
 
-    setStatus('ok', 'Consultando Supabase...');
-    showToast('Cargando datos...', 'info');
+function appendSheet(wb,area,periodo,dataRows){
+  const days=getDays(periodo);
+  const sheetName=area.substring(0,31);
 
-    try {
-      const res = await fetch(
-        `${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}&select=enfermera,fecha,turno&order=enfermera.asc,fecha.asc`,
-        { headers: H }
-      );
-      if (!res.ok) throw new Error('Error al consultar: ' + res.status);
-      const data = await res.json();
+  // Header row
+  const header=['Enfermera',...days.map(d=>`${d} ${wdL(d,periodo)}`),'TOTAL PTS'];
+  const wsData=[header];
 
-      const map = {};
-      data.forEach(rec => {
-        if (!map[rec.enfermera]) map[rec.enfermera] = {};
-        const d = parseInt(rec.fecha.split('-')[2]);
-        map[rec.enfermera][d] = rec.turno;
-      });
+  dataRows.forEach(row=>{
+    const r=[row.enfermera];
+    days.forEach(d=>r.push(row.turnos[d]||''));
+    r.push(calcTotal(row.turnos));
+    wsData.push(r);
+  });
 
-      rows = Object.entries(map).map(([enfermera, turnos]) => ({ enfermera, turnos }));
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
 
-      if (!rows.length) {
-        showToast('Sin registros para este periodo y área', 'err');
-        setStatus('err', 'Sin datos — ' + area + ' · ' + periodo);
-        document.getElementById('table-container').innerHTML =
-          '<div class="empty-state">No hay registros guardados para este periodo y área.</div>';
-      } else {
-        showToast(`${rows.length} enfermeras cargadas`, 'ok');
-        setStatus('ok', `${rows.length} enfermeras · ${data.length} turnos — ${area} · ${periodo}`);
-        renderTable();
+  // Column widths
+  ws['!cols']=[{wch:22},...days.map(()=>({wch:5})),{wch:9}];
+
+  // Styles via cell metadata (xlsx community edition supports basic styles)
+  const range=XLSX.utils.decode_range(ws['!ref']);
+
+  // Header style
+  for(let c=range.s.c;c<=range.e.c;c++){
+    const addr=XLSX.utils.encode_cell({r:0,c});
+    if(!ws[addr])continue;
+    ws[addr].s={
+      font:{bold:true,color:{rgb:'FFFFFF'},sz:10},
+      fill:{fgColor:{rgb:'185FA5'}},
+      alignment:{horizontal:'center',vertical:'center'},
+      border:{bottom:{style:'thin',color:{rgb:'CCCCCC'}}}
+    };
+  }
+  // Nurse column style + total column
+  for(let r=1;r<=range.e.r;r++){
+    const nurseAddr=XLSX.utils.encode_cell({r,c:0});
+    if(ws[nurseAddr])ws[nurseAddr].s={font:{bold:true,sz:10},fill:{fgColor:{rgb:'F0EFE9'}},alignment:{vertical:'center'}};
+    const totalAddr=XLSX.utils.encode_cell({r,c:range.e.c});
+    if(ws[totalAddr])ws[totalAddr].s={font:{bold:true,color:{rgb:'27500A'},sz:10},fill:{fgColor:{rgb:'EAF3DE'}},alignment:{horizontal:'center'}};
+    // Weekend columns
+    days.forEach((d,i)=>{
+      if(isWE(d,periodo)){
+        const addr=XLSX.utils.encode_cell({r,c:i+1});
+        if(ws[addr]&&!ws[addr].s)ws[addr].s={fill:{fgColor:{rgb:'EEF4FF'}}};
       }
-    } catch (e) {
-      showToast(e.message, 'err');
-      setStatus('err', e.message);
-    }
+    });
   }
 
-  function showToast(msg, type) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast ' + type + ' show';
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+  // Title row prepend — insert title above header
+  XLSX.utils.sheet_add_aoa(ws,[[`TURNOS - ${area} - ${periodo}`]],{origin:'A1'});
+  // Shift existing data down
+  const ws2Data=[[`TURNOS — ${area} — ${periodo}`],[''],header];
+  dataRows.forEach(row=>{
+    const r=[row.enfermera];
+    days.forEach(d=>r.push(row.turnos[d]||''));
+    r.push(calcTotal(row.turnos));
+    ws2Data.push(r);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2['!cols']=[{wch:24},...days.map(()=>({wch:5})),{wch:9}];
+
+  // Style title
+  if(ws2['A1'])ws2['A1'].s={font:{bold:true,sz:13,color:{rgb:'185FA5'}},alignment:{horizontal:'left'}};
+  // Style header row (row index 2, 0-based)
+  const hRow=2;
+  const hRange=XLSX.utils.decode_range(ws2['!ref']);
+  for(let c=hRange.s.c;c<=hRange.e.c;c++){
+    const addr=XLSX.utils.encode_cell({r:hRow,c});
+    if(!ws2[addr])continue;
+    ws2[addr].s={font:{bold:true,color:{rgb:'FFFFFF'},sz:10},fill:{fgColor:{rgb:'185FA5'}},alignment:{horizontal:'center',vertical:'center'}};
+  }
+  for(let r=3;r<=hRange.e.r;r++){
+    const nurseA=XLSX.utils.encode_cell({r,c:0});
+    if(ws2[nurseA])ws2[nurseA].s={font:{bold:true,sz:10},fill:{fgColor:{rgb:'F0EFE9'}}};
+    const totA=XLSX.utils.encode_cell({r,c:hRange.e.c});
+    if(ws2[totA])ws2[totA].s={font:{bold:true,color:{rgb:'27500A'},sz:10},fill:{fgColor:{rgb:'EAF3DE'}},alignment:{horizontal:'center'}};
   }
 
-  document.getElementById('periodo').value = new Date().toISOString().slice(0, 7);
+  XLSX.utils.book_append_sheet(wb,ws2,sheetName);
+}
+
+/* ---- TOAST ---- */
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+document.getElementById('periodo').value=new Date().toISOString().slice(0,7);
 </script>
 </body>
 </html>
