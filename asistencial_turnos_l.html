@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Turnos de Enfermería</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f4f0;
+      --surface: #ffffff;
+      --surface2: #f0efe9;
+      --border: rgba(0,0,0,0.10);
+      --border2: rgba(0,0,0,0.18);
+      --text: #1a1a18;
+      --text2: #6b6b65;
+      --text3: #9a9a93;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --blue: #185FA5;
+      --blue-light: #B5D4F4;
+      --blue-dark: #042C53;
+      --green: #3B6D11;
+      --purple: #534AB7;
+      --amber: #FAC775;
+      --amber-dark: #412402;
+      --purple-light: #CCC0F0;
+      --purple-dark: #26215C;
+      --gray: #D3D1C7;
+      --gray-dark: #2C2C2A;
+      --red: #A32D2D;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--blue);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: normal;
+      letter-spacing: .01em;
+      color: var(--text);
+    }
+    header span {
+      font-size: 12px;
+      color: var(--text3);
+      margin-left: 4px;
+    }
+
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .panel-title {
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 1rem;
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    .config-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 11px;
+      color: var(--text2);
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+    .field input, .field select {
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-family: 'Helvetica Neue', sans-serif;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: var(--blue);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .btn {
+      height: 36px;
+      padding: 0 18px;
+      font-size: 13px;
+      font-family: 'Helvetica Neue', sans-serif;
+      font-weight: 500;
+      border: 0.5px solid var(--border2);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .btn:hover { background: var(--surface2); }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .btn-primary:hover { background: #0c447c; }
+    .btn-success { background: var(--green); color: #fff; border-color: var(--green); }
+    .btn-success:hover { background: #27500A; }
+    .btn-load { background: var(--purple); color: #fff; border-color: var(--purple); }
+    .btn-load:hover { background: #3C3489; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 0.5px solid var(--border);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 600px;
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    thead th {
+      background: var(--surface2);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text2);
+      padding: 6px 5px;
+      text-align: center;
+      border-bottom: 0.5px solid var(--border);
+      white-space: nowrap;
+      line-height: 1.4;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    thead th.col-nurse { text-align: left; min-width: 160px; padding-left: 14px; }
+    thead th.we { color: var(--blue); }
+
+    tbody tr { border-bottom: 0.5px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover td { background: #fafaf7; }
+
+    td { padding: 3px 4px; }
+    td.col-nurse {
+      padding: 4px 14px;
+      background: var(--surface2);
+      border-right: 0.5px solid var(--border);
+    }
+    td.col-nurse input {
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: var(--text);
+      width: 150px;
+      outline: none;
+      padding: 2px 0;
+      border-bottom: 1px solid transparent;
+      transition: border-color .15s;
+    }
+    td.col-nurse input:focus { border-bottom-color: var(--blue); }
+
+    select.t-sel {
+      width: 46px;
+      height: 28px;
+      font-size: 11px;
+      font-family: 'Helvetica Neue', sans-serif;
+      font-weight: 600;
+      padding: 0 3px;
+      border: 0.5px solid var(--border);
+      border-radius: 4px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: center;
+      cursor: pointer;
+      outline: none;
+      transition: background .1s;
+    }
+
+    .tN { background: var(--blue-light); color: var(--blue-dark); border-color: #85B7EB; }
+    .tT { background: var(--amber); color: var(--amber-dark); border-color: #EF9F27; }
+    .tTN { background: var(--purple-light); color: var(--purple-dark); border-color: #AFA9EC; }
+    .tD { background: #32CD32; color: var(--amber-dark); border-color: #B4B2A9; }
+    .tM { background: #FFD700; color: var(--amber-dark); border-color: #EF9F27; }
+    .tV { background: var(--gray); color: var(--gray-dark); border-color: #B4B2A9; }
+
+    .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text3);
+      font-size: 14px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      transition: color .15s, background .15s;
+      font-family: sans-serif;
+    }
+    .del-btn:hover { color: var(--red); background: #fcebeb; }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      padding-left: 2px;
+    }
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text2);
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+    .leg-dot {
+      width: 22px; height: 22px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: var(--text2);
+      margin-bottom: 10px;
+      padding: 6px 4px;
+    }
+    .s-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+    .s-dot.red { background: var(--red); }
+
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: var(--text3);
+      font-size: 14px;
+      font-family: 'Helvetica Neue', sans-serif;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 11px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: 'Helvetica Neue', sans-serif;
+      font-weight: 500;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity .3s, transform .3s;
+      transform: translateY(8px);
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.ok { background: var(--green); color: #fff; }
+    .toast.err { background: var(--red); color: #fff; }
+    .toast.info { background: var(--blue); color: #fff; }
+
+    @media (max-width: 600px) {
+      main { padding: 1rem .75rem; }
+      header { padding: .75rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+  </div>
+  <h1>Asistencial — Turnos de Enfermería <span>v1.0</span></h1>
+</header>
+<!-- LOGIN -->
+<div id="login-panel" class="panel" style="max-width:400px;margin:2rem auto;">
+  <p class="panel-title">Acceso de usuario</p>
+  <div class="config-row">
+    <div class="field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="Usuario" />
+    </div>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="Contraseña" />
+    </div>
+  </div>
+  <div class="actions" style="margin-top: 16px;">
+    <button class="btn btn-primary" onclick="login()">Ingresar</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main id="main-content" style="display:none;">
+  <div class="panel">
+    <p class="panel-title">Parámetros del periodo</p>
+    <div class="config-row">
+      <div class="field">
+        <label>Periodo (Año - Mes)</label>
+        <input type="month" id="periodo" />
+      </div>
+      <div class="field">
+        <label>Área</label>
+        <select id="area">
+          <option value="">-- Seleccionar área --</option>
+          <option value="UCI">UCI</option>
+          <option value="Emergencia">Emergencia</option>
+          <option value="Hospitalario">Hospitalario</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="addRow()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Agregar enfermera
+    </button>
+    <button class="btn btn-success" onclick="saveData()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Guardar turnos
+    </button>
+    <button class="btn btn-load" onclick="loadData()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+      Generar / Cargar datos
+    </button>
+  </div>
+
+  <div id="status-bar" class="status-bar">
+    <span class="s-dot" id="s-dot"></span>
+    <span id="s-msg"></span>
+  </div>
+
+  <div id="table-container">
+    <div class="empty-state">Selecciona un periodo y área para comenzar.</div>
+  </div>
+
+  <div class="legend">
+    <span class="leg-item"><span class="leg-dot tM">1</span> Mañana</span>
+    <span class="leg-item"><span class="leg-dot tT">2</span> Tarde</span>
+    <span class="leg-item"><span class="leg-dot tN">3</span> Noche</span>
+    <span class="leg-item"><span class="leg-dot tD">1/2</span> Dia</span>
+    <span class="leg-item"><span class="leg-dot tTN">2/3</span> Tarde-Noche</span>
+    
+    <span class="leg-item"><span class="leg-dot tV">V</span> Descanso</span>
+    <span class="leg-item" style="color:var(--text3)">— Sin turno asignado</span>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const SB_URL = 'https://kuqettbaqlezvczdzytj.supabase.co';
+  const SB_KEY = 'sb_publishable_uBtrL5lqa1ysxOsCLHAGmQ_V9TgC1fk';
+  const H = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json'
+  };
+
+  // Usuarios y áreas
+  const users = {
+    'uci': { password: '1234', area: 'UCI' },
+    'emergencia': { password: 'abcd', area: 'Emergencia' },
+    'hospitalario': { password: '5678', area: 'Hospitalario' }
+  };
+
+  function login() {
+    const u = document.getElementById('login-user').value.trim();
+    const p = document.getElementById('login-pass').value.trim();
+    if (users[u] && users[u].password === p) {
+    const userArea = users[u].area;
+
+    document.getElementById('login-panel').style.display = 'none';
+    document.getElementById('main-content').style.display = 'block';
+
+    // Fijar el área y bloquear cambios
+    const areaSel = document.getElementById('area');
+    areaSel.value = userArea;
+    areaSel.disabled = true;
+
+    showToast('Bienvenido ' + u, 'ok');
+    } else {
+      showToast('Usuario o contraseña incorrectos', 'err');
+    }
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function getPeriodo() { return document.getElementById('periodo').value; }
+  function getArea() { return document.getElementById('area').value; }
+
+  function getDays(periodo) {
+    if (!periodo) return [];
+    const [y, m] = periodo.split('-').map(Number);
+    const n = new Date(y, m, 0).getDate();
+    return Array.from({ length: n }, (_, i) => i + 1);
+  }
+
+  function isWE(d, periodo) {
+    const [y, m] = periodo.split('-').map(Number);
+    const wd = new Date(y, m - 1, d).getDay();
+    return wd === 0 || wd === 6;
+  }
+
+  function wdLetter(d, periodo) {
+    const [y, m] = periodo.split('-').map(Number);
+    return ['D', 'L', 'M', 'X', 'J', 'V', 'S'][new Date(y, m - 1, d).getDay()];
+  }
+
+  function tClass(v) { return v ? 't' + v : ''; }
+  function esc(s) { return (s || '').replace(/"/g, '&quot;'); }
+
+  function renderTable() {
+    const periodo = getPeriodo();
+    const days = getDays(periodo);
+    const container = document.getElementById('table-container');
+
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty-state">No hay enfermeras. Usa "Agregar enfermera" o carga datos guardados.</div>';
+      return;
+    }
+
+    let h = '<div class="table-wrap"><table><thead><tr><th class="col-nurse">Enfermera</th>';
+    days.forEach(d => {
+      const we = isWE(d, periodo);
+      h += `<th${we ? ' class="we"' : ''}>${d}<br><span style="font-size:9px;opacity:.7">${wdLetter(d, periodo)}</span></th>`;
+    });
+    h += '<th style="width:40px"></th></tr></thead><tbody>';
+
+    rows.forEach((row, ri) => {
+      h += `<tr>
+        <td class="col-nurse">
+          <input type="text" value="${esc(row.enfermera)}" onchange="rows[${ri}].enfermera=this.value" placeholder="Nombre enfermera" />
+        </td>`;
+      days.forEach(d => {
+        const v = row.turnos[d] || '';
+        const cls = tClass(v);
+        h += `<td style="text-align:center">
+          <select class="t-sel ${cls}" onchange="setTurno(${ri},${d},this)">
+            <option value="" ${!v ? 'selected' : ''}>–</option>
+            <option value="1" ${v === '1' ? 'selected' : ''}>1</option>
+            <option value="2" ${v === '2' ? 'selected' : ''}>2</option>
+            <option value="3" ${v === '3' ? 'selected' : ''}>3</option>
+            <option value="1/2" ${v === '1/2' ? 'selected' : ''}>1/2</option>
+            <option value="2/3" ${v === '2/3' ? 'selected' : ''}>2/3</option>
+            <option value="V" ${v === 'V' ? 'selected' : ''}>V</option>
+          </select>
+        </td>`;
+      });
+      h += `<td style="text-align:center"><button class="del-btn" onclick="removeRow(${ri})" title="Quitar fila">✕</button></td>`;
+      h += '</tr>';
+    });
+
+    h += '</tbody></table></div>';
+    container.innerHTML = h;
+  }
+
+  function setTurno(ri, d, sel) {
+    rows[ri].turnos[d] = sel.value;
+    sel.className = 't-sel ' + tClass(sel.value);
+  }
+
+  function addRow() {
+    if (!getPeriodo()) { showToast('Selecciona un periodo primero', 'err'); return; }
+    rows.push({ enfermera: 'Enfermera', turnos: {} });
+    renderTable();
+    setStatus('ok', rows.length + ' enfermera(s) en tabla');
+  }
+
+  function removeRow(ri) {
+    rows.splice(ri, 1);
+    renderTable();
+  }
+
+  function setStatus(type, msg) {
+    const bar = document.getElementById('status-bar');
+    bar.style.display = 'flex';
+    document.getElementById('s-dot').className = 's-dot' + (type === 'err' ? ' red' : '');
+    document.getElementById('s-msg').textContent = msg;
+  }
+
+  async function saveData() {
+    const periodo = getPeriodo();
+    const area = getArea();
+    if (!periodo || !area) { showToast('Selecciona periodo y área', 'err'); return; }
+    if (!rows.length) { showToast('No hay datos para guardar', 'err'); return; }
+
+    const days = getDays(periodo);
+    const records = [];
+    rows.forEach(row => {
+      days.forEach(d => {
+        const turno = row.turnos[d] || null;
+        if (turno) {
+          const [y, m] = periodo.split('-');
+          records.push({
+            periodo,
+            area,
+            enfermera: row.enfermera,
+            fecha: `${y}-${m}-${String(d).padStart(2, '0')}`,
+            turno
+          });
+        }
+      });
+    });
+
+    setStatus('ok', 'Guardando...');
+    showToast('Guardando...', 'info');
+
+    try {
+      const del = await fetch(
+        `${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}`,
+        { method: 'DELETE', headers: H }
+      );
+      if (!del.ok && del.status !== 204) throw new Error('Error al limpiar previos: ' + del.status);
+
+      if (records.length) {
+        const ins = await fetch(`${SB_URL}/rest/v1/asistencial`, {
+          method: 'POST',
+          headers: { ...H, 'Prefer': 'return=minimal' },
+          body: JSON.stringify(records)
+        });
+        if (!ins.ok) {
+          const msg = await ins.text();
+          throw new Error('Error al insertar (' + ins.status + '): ' + msg);
+        }
+      }
+
+      showToast(`${records.length} turnos guardados`, 'ok');
+      setStatus('ok', `Guardado — ${records.length} registros · ${area} · ${periodo}`);
+    } catch (e) {
+      showToast(e.message, 'err');
+      setStatus('err', e.message);
+    }
+  }
+
+  async function loadData() {
+    const periodo = getPeriodo();
+    const area = getArea();
+    if (!periodo || !area) { showToast('Selecciona periodo y área', 'err'); return; }
+
+    setStatus('ok', 'Consultando Supabase...');
+    showToast('Cargando datos...', 'info');
+
+    try {
+      const res = await fetch(
+        `${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}&select=enfermera,fecha,turno&order=enfermera.asc,fecha.asc`,
+        { headers: H }
+      );
+      if (!res.ok) throw new Error('Error al consultar: ' + res.status);
+      const data = await res.json();
+
+      const map = {};
+      data.forEach(rec => {
+        if (!map[rec.enfermera]) map[rec.enfermera] = {};
+        const d = parseInt(rec.fecha.split('-')[2]);
+        map[rec.enfermera][d] = rec.turno;
+      });
+
+      rows = Object.entries(map).map(([enfermera, turnos]) => ({ enfermera, turnos }));
+
+      if (!rows.length) {
+        showToast('Sin registros para este periodo y área', 'err');
+        setStatus('err', 'Sin datos — ' + area + ' · ' + periodo);
+        document.getElementById('table-container').innerHTML =
+          '<div class="empty-state">No hay registros guardados para este periodo y área.</div>';
+      } else {
+        showToast(`${rows.length} enfermeras cargadas`, 'ok');
+        setStatus('ok', `${rows.length} enfermeras · ${data.length} turnos — ${area} · ${periodo}`);
+        renderTable();
+      }
+    } catch (e) {
+      showToast(e.message, 'err');
+      setStatus('err', e.message);
+    }
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  document.getElementById('periodo').value = new Date().toISOString().slice(0, 7);
+</script>
+</body>
+</html>
