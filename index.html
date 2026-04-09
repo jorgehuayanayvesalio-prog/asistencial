@@ -168,11 +168,11 @@ select.t-sel{
     <div class="config-row">
       <div class="field" style="margin:0">
         <label>Periodo (Año - Mes)</label>
-        <input type="month" id="periodo"/>
+        <input type="month" id="periodo" onchange="autoLoad()"/>
       </div>
       <div class="field" id="area-field" style="margin:0">
         <label>Área</label>
-        <select id="area">
+        <select id="area" onchange="autoLoad()">
           <option value="">-- Seleccionar área --</option>
           <option>HOSPITALIZACION</option>
           <option>EMERGENCIA</option>
@@ -197,10 +197,6 @@ select.t-sel{
     <button class="btn btn-success" onclick="saveData()">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
       Guardar
-    </button>
-    <button class="btn btn-load" onclick="loadData()">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
-      Generar / Cargar
     </button>
     <div class="sep"></div>
     <button class="btn btn-excel" onclick="exportExcel(false)">
@@ -294,6 +290,8 @@ function login(){
     }
     document.getElementById('btn-dl-all').style.display=isAdmin?'flex':'none';
     showToast('Bienvenido, '+u,'ok');
+    // Para usuarios de área fija, cargar automáticamente si ya hay periodo
+    if(!isAdmin && getPeriodo()) autoLoad();
   } else {
     showToast('Usuario o contraseña incorrectos','err');
     document.getElementById('login-pass').value='';
@@ -409,6 +407,15 @@ async function saveData(){
   }catch(e){showToast(e.message,'err');setStatus('err',e.message);}
 }
 
+/* AUTO-LOAD: se dispara al cambiar periodo o área */
+let autoLoadTimer=null;
+function autoLoad(){
+  const periodo=getPeriodo(),area=getArea();
+  if(!periodo||!area)return;
+  clearTimeout(autoLoadTimer);
+  autoLoadTimer=setTimeout(()=>loadData(),300);
+}
+
 async function loadData(){
   const periodo=getPeriodo(),area=getArea();
   if(!periodo||!area){showToast('Selecciona periodo y área','err');return;}
@@ -452,8 +459,9 @@ async function exportExcel(exportAll){
   const wb=XLSX.utils.book_new();
 
   if(exportAll){
-    /* Admin: descarga todas las áreas desde Supabase */
-    let hasData=false;
+    /* Admin: UNA sola hoja con todas las áreas apiladas */
+    const days=getDays(periodo);
+    const allData=[];   // array of {area, rows}
     for(const area of AREAS){
       try{
         const res=await fetch(`${SB_URL}/rest/v1/asistencial?periodo=eq.${encodeURIComponent(periodo)}&area=eq.${encodeURIComponent(area)}&select=enfermera,fecha,turno&order=enfermera.asc,fecha.asc`,{headers:H});
@@ -465,13 +473,64 @@ async function exportExcel(exportAll){
           if(!map[rec.enfermera])map[rec.enfermera]={};
           map[rec.enfermera][parseInt(rec.fecha.split('-')[2])]=rec.turno;
         });
-        appendSheet(wb,area,periodo,Object.entries(map).map(([e,t])=>({enfermera:e,turnos:t})));
-        hasData=true;
+        allData.push({area,aRows:Object.entries(map).map(([e,t])=>({enfermera:e,turnos:t}))});
       }catch(e){console.warn('Error área '+area,e);}
     }
-    if(!hasData){showToast('No hay datos para exportar en este periodo','err');return;}
+    if(!allData.length){showToast('No hay datos para exportar en este periodo','err');return;}
+
+    const wsData=[];
+    allData.forEach(({area,aRows},idx)=>{
+      if(idx>0)wsData.push([]); // fila vacía entre áreas
+      wsData.push([`${area} — ${periodo}`]);
+      wsData.push(['ENFERMERA',...days.map(d=>d),'TOTAL']);
+      aRows.forEach(row=>{
+        const r=[row.enfermera];
+        days.forEach(d=>r.push(row.turnos[d]||''));
+        r.push(calcTotal(row.turnos));
+        wsData.push(r);
+      });
+    });
+
+    const ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:26},...days.map(()=>({wch:4})),{wch:7}];
+
+    /* Estilos */
+    let rowIdx=0;
+    allData.forEach(({area,aRows},idx)=>{
+      if(idx>0)rowIdx++; // fila vacía
+      // Título de área
+      const tAddr=XLSX.utils.encode_cell({r:rowIdx,c:0});
+      if(ws[tAddr])ws[tAddr].s={font:{bold:true,sz:11,color:{rgb:'185FA5'}},fill:{fgColor:{rgb:'E6F1FB'}}};
+      rowIdx++;
+      // Encabezado
+      const colCount=days.length+2;
+      for(let c=0;c<colCount;c++){
+        const addr=XLSX.utils.encode_cell({r:rowIdx,c});
+        if(!ws[addr])continue;
+        const isTotal=c===colCount-1;
+        ws[addr].s={font:{bold:true,color:{rgb:isTotal?'27500A':'FFFFFF'},sz:9},fill:{fgColor:{rgb:isTotal?'EAF3DE':'185FA5'}},alignment:{horizontal:'center'}};
+      }
+      rowIdx++;
+      // Filas de datos
+      aRows.forEach(row=>{
+        const na=XLSX.utils.encode_cell({r:rowIdx,c:0});
+        if(ws[na])ws[na].s={font:{bold:true,sz:9},fill:{fgColor:{rgb:'F0EFE9'}}};
+        const ta=XLSX.utils.encode_cell({r:rowIdx,c:days.length+1});
+        if(ws[ta])ws[ta].s={font:{bold:true,color:{rgb:'27500A'},sz:9},fill:{fgColor:{rgb:'EAF3DE'}},alignment:{horizontal:'center'}};
+        days.forEach((d,i)=>{
+          if(isWE(d,periodo)){
+            const addr=XLSX.utils.encode_cell({r:rowIdx,c:i+1});
+            if(ws[addr]&&!ws[addr].s)ws[addr].s={fill:{fgColor:{rgb:'EEF4FF'}}};
+          }
+        });
+        rowIdx++;
+      });
+    });
+
+    XLSX.utils.book_append_sheet(wb,'Turnos Completos');
+    wb.Sheets['Turnos Completos']=ws;
     XLSX.writeFile(wb,`Turnos_${periodo}_TODAS_AREAS.xlsx`);
-    showToast('Excel descargado — todas las áreas','ok');
+    showToast(`Excel descargado — ${allData.length} áreas`,'ok');
   } else {
     /* Usuario normal o admin descargando área específica */
     const area=isAdmin?getArea():currentUser.area;
