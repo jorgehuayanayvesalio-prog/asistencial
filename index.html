@@ -484,8 +484,28 @@ function setTurno(ri,d,sel){
   const t=document.getElementById('tot'+ri);
   if(t)t.textContent=calcTotal(rows[ri].turnos);
 }
+  
+async function removeRow(ri){
+  const row = rows[ri];
+  const periodo = getPeriodo();
+  const area = getArea();
 
-function removeRow(ri){rows.splice(ri,1);renderTable();}
+  try{
+    await fetch(
+      `${SB_URL}/rest/v1/asistencial?periodo=eq.${enc(periodo)}&area=eq.${enc(area)}&nombre=eq.${enc(row.nombre)}`,
+      {
+        method:'DELETE',
+        headers:H
+      }
+    );
+
+    rows.splice(ri,1);
+    renderTable();
+
+  }catch(e){
+    showToast('Error al eliminar','err');
+  }
+}
 
 /* ═══════════════════════════════ MODAL AGREGAR ════════════════════════ */
 function openAddModal(){
