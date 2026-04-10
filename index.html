@@ -485,27 +485,7 @@ function setTurno(ri,d,sel){
   if(t)t.textContent=calcTotal(rows[ri].turnos);
 }
   
-async function removeRow(ri){
-  const row = rows[ri];
-  const periodo = getPeriodo();
-  const area = getArea();
-
-  try{
-    await fetch(
-      `${SB_URL}/rest/v1/asistencial?periodo=eq.${enc(periodo)}&area=eq.${enc(area)}&nombre=eq.${enc(row.nombre)}`,
-      {
-        method:'DELETE',
-        headers:H
-      }
-    );
-
-    rows.splice(ri,1);
-    renderTable();
-
-  }catch(e){
-    showToast('Error al eliminar','err');
-  }
-}
+function removeRow(ri){ rows.splice(ri,1); renderTable(); }
 
 /* ═══════════════════════════════ MODAL AGREGAR ════════════════════════ */
 function openAddModal(){
@@ -608,21 +588,29 @@ async function saveData(){
   const days=getDays(periodo);
   const records=[];
   rows.forEach(row=>{
+    const[y,m]=periodo.split('-');
+  
+    // si no tiene ningún turno, no guardar nada
+    const tieneTurno = Object.values(row.turnos).some(v=>v);
+    if(!tieneTurno) return;
+  
     days.forEach(d=>{
-      const turno=row.turnos[d]||null;
-      const[y,m]=periodo.split('-');
+      const turno=row.turnos[d];
+      if(!turno) return;   // ← NO guardar vacíos
+  
       const fecha=`${y}-${m}-${String(d).padStart(2,'0')}`;
+  
       records.push({
-        periodo, area,
+        periodo,
+        area,
         nombre: row.nombre,
-        DNI:    row.dni||null,
-        grado:  row.grado||null,
+        DNI: row.dni || null,
+        grado: row.grado || null,
         fecha,
-        turno:  turno||null
+        turno
       });
     });
   });
-
   setStatus('ok','Guardando...');showToast('Guardando...','info');
   try{
     // Borrar registros de turno existentes para este periodo+area
