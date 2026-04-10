@@ -665,6 +665,8 @@ function handleUploadFile(e){
     }catch(err){showToast('Error al leer el archivo: '+err.message,'err');}
   };
   reader.readAsArrayBuffer(file);
+  // permitir subir mismo archivo otra vez
+  e.target.value = '';
 }
 
 async function uploadPersonal(){
