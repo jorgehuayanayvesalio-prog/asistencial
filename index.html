@@ -294,10 +294,13 @@ select.t-sel{width:32px;height:24px;font-size:10px;font-family:inherit;font-weig
     <div class="field">
       <label>Grado</label>
       <select id="modal-grado">
-        <option value="LICENCIADA">LICENCIADA</option>
-        <option value="TECNICA">TECNICA</option>
-        <option value="COORDINADOR">COORDINADOR</option>
-        <option value="ASISTENTE">ASISTENTE</option>
+        <option value="LICENCIADO">LICENCIADO</option>
+        <option value="TECNICO">TECNICO</option>
+        <option value="LICENCIADO COORDINADOR">LICENCIADO COORDINADOR</option>
+        <option value="LICENCIADO JEFE">LICENCIADO JEFE</option>
+        <option value="OBSTETRIZ COORDINADOR">OBSTETRIZ COORDINADOR</option>
+        <option value="ASISTENTE ADMINISTRATIVO">ASISTENTE ADMINISTRATIVO</option>
+        <option value="LICENCIADO COORDINADOR GENERAL">LICENCIADO COORDINADOR GENERAL</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -320,13 +323,24 @@ const AREAS=[
   'CENTRAL DE ESTERILIZACION','DEPARTAMENTO DE ENFERMERIA',
   'NEONATOLOGIA','UNIDAD DE QUEMADOS'
 ];
-const GRADOS=['LICENCIADA','TECNICA','COORDINADOR','ASISTENTE'];
+const GRADOS=[
+  'LICENCIADO',
+  'TECNICO',
+  'LICENCIADO COORDINADOR',
+  'LICENCIADO JEFE',
+  'OBSTETRIZ COORDINADOR',
+  'ASISTENTE ADMINISTRATIVO',
+  'LICENCIADO COORDINADOR GENERAL'
+];
 // Color de fondo de separador por grado
 const GRADO_COLOR={
-  'LICENCIADA':  {bg:'E6F1FB', txt:'185FA5'},
-  'TECNICA':     {bg:'EAF3DE', txt:'27500A'},
-  'COORDINADOR': {bg:'CCC0F0', txt:'26215C'},
-  'ASISTENTE':   {bg:'FAC775', txt:'412402'},
+  'LICENCIADO': {bg:'E6F1FB', txt:'185FA5'},
+  'TECNICO': {bg:'EAF3DE', txt:'27500A'},
+  'LICENCIADO COORDINADOR': {bg:'CCC0F0', txt:'26215C'},
+  'LICENCIADO JEFE': {bg:'FDE68A', txt:'412402'},
+  'OBSTETRIZ COORDINADOR': {bg:'FFD6E7', txt:'7A1F3D'},
+  'ASISTENTE ADMINISTRATIVO': {bg:'D3D1C7', txt:'2C2C2A'},
+  'LICENCIADO COORDINADOR GENERAL': {bg:'B5D4F4', txt:'042C53'},
 };
 
 const USERS={
